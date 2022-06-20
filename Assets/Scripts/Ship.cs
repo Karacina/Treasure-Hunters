@@ -13,19 +13,21 @@ public class Ship : MonoBehaviour
         {
             Debug.Log("Level ended");
             collision.GetComponent<PlayerMovement>().canMove = false;
-            StartCoroutine(NextLevel());
+            //StartCoroutine(NextLevel());
         }
     }
 
-    public IEnumerator NextLevel()
-    { 
-        yield return new WaitForSeconds(waitTime);
-        //while (move)
-        //{
-        //    transform.Translate(Vector2.right * speed * Time.deltaTime);
-        //    Debug.Log("move");
+    //public IEnumerator NextLevel()
+    //{ 
+    //    yield return new WaitForSeconds(waitTime);
+    //    Debug.Log("move");
+    //    while (move)
+    //    {
+    //        transform.Translate(Vector2.right * speed);
             
-        //}
-        //yield return new WaitForSeconds(5);
-    }
+    //        yield return new WaitForSeconds(5);
+
+    //    }
+        
+    //}
 }

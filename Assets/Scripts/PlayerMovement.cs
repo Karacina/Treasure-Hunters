@@ -15,22 +15,27 @@ public class PlayerMovement : MonoBehaviour
     private BoxCollider2D _colider;
 
     [Space]
-    [Header("Stats")]
+    [Header("Horizontal Movement")]
     [SerializeField] private float WalkSpeed = 10f;
-    [SerializeField] private float jumpHeight = 5f;
-    [SerializeField] private float gravityScale = 10;
-    [SerializeField] private float fallingGravityScale = 40;
+    private bool isRight = true;
+    public bool canMove;
+
+    [Space]
+    [Header("Vertical Movement")]
+    [SerializeField] private float jumpHeight = 2f;
+    [SerializeField] private float gravity = 1f;
+    //[SerializeField] private float gravityScale = 10;
+    [SerializeField] private float fallingGravityScale = 5f;
+    public bool isGrounded = false;
+    public bool isFalling = false;
 
     [Header("Parametrs")]
     [SerializeField] private float healPoints = 100f;
 
     [Space]
     [Header("Booleans")]
-    public bool isRight = true;
-    public bool isGrounded = false;
-    public bool isFalling = false;
     public bool isDead=false;
-    public bool canMove;
+    
     [Space]
 
     public MovementState mState = MovementState.Idle;
@@ -73,19 +78,26 @@ public class PlayerMovement : MonoBehaviour
 
 
         //Jump force
-        //if (_rb.velocity.y >= 0)
-        //{
-        //    _rb.gravityScale = gravityScale;
-        //    isFalling = false;
-        //}
-        //else if (_rb.velocity.y < 0)
-        //{
-        //    _rb.gravityScale = fallingGravityScale;
-        //    isFalling = true;
-        //}
+        //modifyPhysics();
         _animator.SetBool("isFalling", isFalling);
     }
-
+    private void modifyPhysics()
+    {
+        isFalling = false;
+        if (!isGrounded)
+        {
+            
+            if (_rb.velocity.y < 0)
+            {
+                _rb.gravityScale = gravity * fallingGravityScale;
+                isFalling = true;
+            }
+            else if (_rb.velocity.y > 0)
+            {
+                _rb.gravityScale = gravity * (fallingGravityScale / 1.5f);
+            }
+        }        
+    }
 
     private void Move(float horizontal)
     {

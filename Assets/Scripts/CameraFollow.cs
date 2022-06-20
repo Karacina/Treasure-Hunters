@@ -4,18 +4,24 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    [SerializeField] private GameObject _target;
+    [SerializeField] private Transform _target;
+    private Vector3 moveTemp;
+    public float offsetY = 2;
+    public float offsetX = 2;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        moveTemp=_target.transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
-        Vector3 target=_target.transform.position;
-        target.z = -10;
-        transform.position = target;
+        moveTemp = _target.transform.position;
+        moveTemp.y += offsetY;
+        moveTemp.x += offsetX;
+        moveTemp.z = transform.position.z;
+        transform.position = moveTemp;
     }
 }
