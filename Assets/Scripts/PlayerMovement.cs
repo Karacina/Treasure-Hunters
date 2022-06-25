@@ -10,14 +10,16 @@ public enum MovementState
 public class PlayerMovement : MonoBehaviour
 {
     // COMPONENTS
-    [SerializeField] private Animator _animator;
+    private Animator _animator;
     private Rigidbody2D _rb;
     private BoxCollider2D _colider;
 
+    [SerializeField] private Transform _groundCheckPoint;
+    [SerializeField] private float _groundCheckSize;
     [Space]
     [Header("Horizontal Movement")]
     [SerializeField] private float WalkSpeed = 10f;
-    private bool isRight = true;
+
     public bool canMove;
 
     [Space]
@@ -34,8 +36,17 @@ public class PlayerMovement : MonoBehaviour
 
     [Space]
     [Header("Booleans")]
-    public bool isDead=false;
-    
+    public bool isDead = false;
+
+    // STATE PARAMETRS
+    private bool _isFacingRight = true;
+
+    private float coyoteTime = 0.2f;
+    private float coyoteTimeCounter;
+
+    private float jumpBufferTime = 0.2f;
+    private float jumpBufferCounter;
+
     [Space]
 
     public MovementState mState = MovementState.Idle;
@@ -47,26 +58,56 @@ public class PlayerMovement : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
         _colider = GetComponent<BoxCollider2D>();
+        _animator = GetComponent<Animator>();
     }
 
     private void Update()
     {
-        //Get ground
+        // Ground check
+
+
         isGrounded = IsGrounded();
         _animator.SetBool("isGround", isGrounded);
 
         float horizontalMove = Input.GetAxisRaw("Horizontal");
 
-        //Walk
+        // Walk
         Move(horizontalMove);
         _animator.SetFloat("Move", Mathf.Abs(horizontalMove));
 
-        //Jump
+        // JUMP
+
+        // Coyote Time
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        if (coyoteTimeCounter > 0f && jumpBufferCounter > 0f)
         {
             _animator.SetTrigger("Jump");
             Jump();
         }
+
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            coyoteTimeCounter = 0;
+        }
+
+        // Inventory
         if (Input.GetKeyDown(KeyCode.LeftShift))
             FindObjectOfType<InventorySystem>().ListItems();
 
@@ -76,9 +117,8 @@ public class PlayerMovement : MonoBehaviour
             display.UpdateInventory();
         }
 
-
-        //Jump force
-        //modifyPhysics();
+        // Jump force
+        modifyPhysics();
         _animator.SetBool("isFalling", isFalling);
     }
     private void modifyPhysics()
@@ -86,7 +126,7 @@ public class PlayerMovement : MonoBehaviour
         isFalling = false;
         if (!isGrounded)
         {
-            
+
             if (_rb.velocity.y < 0)
             {
                 _rb.gravityScale = gravity * fallingGravityScale;
@@ -96,7 +136,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 _rb.gravityScale = gravity * (fallingGravityScale / 1.5f);
             }
-        }        
+        }
     }
 
     private void Move(float horizontal)
@@ -108,49 +148,35 @@ public class PlayerMovement : MonoBehaviour
             mState = MovementState.Idle;
 
         //Flip direction
-        if (horizontal > 0 && !isRight) FlipDirection();
-        if (horizontal < 0 && isRight) FlipDirection();
+        if (horizontal > 0 && !_isFacingRight) FlipDirection();
+        if (horizontal < 0 && _isFacingRight) FlipDirection();
     }
     private void Jump()
     {
-        if (isGrounded)
-        {
-            float jumpForceTest = Mathf.Sqrt(-2 * jumpHeight * (Physics2D.gravity.y * _rb.gravityScale));
-            _rb.AddForce(new Vector2(0, jumpForceTest), ForceMode2D.Impulse);
-            mState = MovementState.Jump;
-        }
+        float jumpForceTest = Mathf.Sqrt(-2 * jumpHeight * (Physics2D.gravity.y * _rb.gravityScale));
+
+        _rb.AddForce(new Vector2(0, jumpForceTest), ForceMode2D.Impulse);
+        mState = MovementState.Jump;
+        jumpBufferCounter = 0f;
     }
     private void FlipDirection()
     {
-        isRight =!isRight;
         Vector2 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
+
+        _isFacingRight = !_isFacingRight;    //flip bool
     }
     private bool IsGrounded()
     {
-        Vector2 position = _colider.bounds.center;
-        position.y -= _colider.size.y;
-
-        Vector2 position2 = position;
-        position2.x+=_colider.size.x;
-
-        Vector2 direction = Vector2.down;
-        float distance = .1f;
-
-        Debug.DrawRay(position, direction, Color.yellow);
-        Debug.DrawRay(_colider.bounds.min, direction, Color.yellow);
-        Debug.DrawRay(position2, direction, Color.yellow);
-        RaycastHit2D hit = Physics2D.Raycast(position, direction, distance, jumpableGround);
-        RaycastHit2D hit2 = Physics2D.Raycast(_colider.bounds.min, direction, distance, jumpableGround);
-        RaycastHit2D hit3 = Physics2D.Raycast(position2, direction, distance, jumpableGround);
-        if (hit.collider != null || hit2.collider != null || hit3.collider != null)
-        {
-            return true;
-        }
-
-        return false;
+        //return _colider.IsTouchingLayers(jumpableGround);
         //return Physics2D.BoxCast(_colider.bounds.center, _colider.bounds.size, 0f, Vector2.down, .1f, jumpableGround);
+        return Physics2D.OverlapCircle(_groundCheckPoint.position, _groundCheckSize, jumpableGround);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(_groundCheckPoint.position, _groundCheckSize);
     }
     public void TakeHit()
     {

@@ -5,17 +5,17 @@ using UnityEngine;
 public class PlayerCombat : MonoBehaviour
 {
     private Animator _animator;
-    
+
 
     [Header("Animations")]
     [SerializeField] private AnimatorOverrideController animatorOverride;
     [SerializeField] private RuntimeAnimatorController controller;
-    
+
     [Space]
     [SerializeField] private Transform attackHitBoxPos;
     [SerializeField] float attackRadius, attackDamage;
     [SerializeField] LayerMask isDamagable;
-    [SerializeField] private float lastInputTime=Mathf.NegativeInfinity;
+    [SerializeField] private float lastInputTime = Mathf.NegativeInfinity;
     [SerializeField] private float inputTimer;
 
     [Space]
@@ -35,12 +35,12 @@ public class PlayerCombat : MonoBehaviour
         // Attack
         CheckCombatInput();
         SetCombatAnimation();
-        CheckAttacks();  
+        CheckAttacks();
     }
 
     private void CheckCombatInput()
     {
-        if(Input.GetMouseButtonDown(0) )
+        if (Input.GetMouseButtonDown(0))
         {
             withSword = true;
             attacked = true;
@@ -82,9 +82,9 @@ public class PlayerCombat : MonoBehaviour
 
     private void CheckAttackHitBox()
     {
-        Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(attackHitBoxPos.position, attackRadius,isDamagable);
-        
-        foreach(Collider2D collider in detectedObjects)
+        Collider2D[] detectedObjects = Physics2D.OverlapCircleAll(attackHitBoxPos.position, attackRadius, isDamagable);
+
+        foreach (Collider2D collider in detectedObjects)
         {
             Debug.Log("destroyed");
             Destroy(collider.gameObject);
